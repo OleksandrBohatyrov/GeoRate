@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Information</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            background-image: url('0e13423cd11c1ce60c364e9a2bb34556 2 (1).png');
+            background-size: cover;
+        }
+        #map {
+            height: 550px;
+            width: 50%;
+            margin-top: 20px;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+        #city-list {
+            position: fixed;
+            top: 60px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        #city-list button {
+            display: block;
+            margin-bottom: 10px;
+            width: 180px; /* Увеличиваем ширину кнопок */
+            font-size: 18px; /* Увеличиваем размер текста кнопок */
+        }
+        #navigation {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        #navigation a {
+            margin-left: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        #sections-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 50px;
+        }
+
+        .section {
+            color: white;
+            margin: 0 60px; /* Добавляет небольшой отступ между секциями */
+            text-align: center; /* Выравнивает содержимое по центру */
+        }
+
+        .sec2 {
+            margin: 0 60px;
+        }
+
+    </style>
+</head>
+<body>
+<div id="navigation">
+    <a href="#map">Map</a>
+    <a href="about-us.html">About Us</a>
+</div>
+<h1>GeoRater</h1>
+<div id="city-list">
+    <button class="btn btn-primary" onclick="showCity('Tallinn')">Tallinn</button>
+    <button class="btn btn-primary" onclick="showCity('Tartu')">Tartu</button>
+    <button class="btn btn-primary" onclick="showCity('Narva')">Narva</button>
+    <button class="btn btn-primary" onclick="showCity('Pärnu')">Pärnu</button>
+    <button class="btn btn-primary" onclick="showCity('Kohtla-Järve')">Kohtla-Järve</button>
+    <button class="btn btn-primary" onclick="showCity('Viljandi')">Viljandi</button>
+    <button class="btn btn-primary" onclick="showCity('Rakvere')">Rakvere</button>
+    <!-- Add more buttons here if needed -->
+</div>
+<div id="map"></div>
+
+<!-- Modal -->
+<div class="modal fade" id="city-info-modal" tabindex="-1" role="dialog" aria-labelledby="city-info-modal-title" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="city-info-modal-title">City Name</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- City information will be displayed here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div id="sections-container">
+
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    var cities = [
+        { name: "Tallinn", coords: [59.4370, 24.7536], description: "Tallinn is the capital and largest city of Estonia. It is known for its well-preserved medieval Old Town, a UNESCO World Heritage Site." },
+        { name: "Tartu", coords: [58.3780, 26.7299], description: "Tartu is the second largest city in Estonia and is known as a university town with a rich cultural scene." },
+        { name: "Narva", coords: [59.3753, 28.1937], description: "Narva is the third largest city in Estonia and is located on the border with Russia. It is known for its historical heritage and cultural diversity." },
+        { name: "Pärnu", coords: [58.3776, 24.4997], description: "Pärnu is a popular resort town located on the coast of the Gulf of Riga. It is known for its sandy beaches and vibrant summer events." },
+        { name: "Kohtla-Järve", coords: [59.3985, 27.2806], description: "Kohtla-Järve is one of the largest cities in Estonia and is known for its industrial history, particularly in oil shale mining." },
+        { name: "Viljandi", coords: [58.3639, 25.5965], description: "Viljandi is a charming town known for its historical buildings, scenic lake, and vibrant cultural scene." },
+        { name: "Rakvere", coords: [59.3453, 26.3560], description: "Rakvere is a historic town with a medieval castle and numerous cultural events and festivals." },
+        // Add more cities here if needed
+    ];
+
+    var cityComments = {
+        "Tallinn": [
+            { name: "Artur Sys", comment: "The best capital in the world" },
+            { name: "John Doe", comment: "Love the architecture" },
+            { name: "Alice Smith", comment: "Great food scene" }
+        ],
+        "Tartu": [
+            { name: "Matvei 4 reikh", comment: "Good transport system!" },
+            { name: "Eva Brown", comment: "Beautiful university town" },
+            { name: "Mike Johnson", comment: "Friendly people" }
+        ],
+        "Narva": [
+            { name: "Deniss", comment: "I really like food" },
+            { name: "Anna Petrova", comment: "Rich cultural heritage" },
+            { name: "Robert White", comment: "Beautiful views of the river" }
+        ],
+        "Pärnu": [
+            { name: "Sophie Miller", comment: "Amazing beaches!" },
+            { name: "Daniel Johnson", comment: "Great place for a summer vacation" },
+            { name: "Linda Anderson", comment: "Lovely atmosphere" }
+        ],
+        "Kohtla-Järve": [
+            { name: "Ivan Petrov", comment: "Industrial city with rich history" },
+            { name: "Olga Smirnova", comment: "Interesting mix of cultures" },
+            { name: "Maxim Kuznetsov", comment: "Good for outdoor activities" }
+        ],
+        "Viljandi": [
+            { name: "Julia Anderson", comment: "Charming town with friendly people" },
+            { name: "Andres Luik", comment: "Beautiful nature around the lake" },
+            { name: "Maria Ivanova", comment: "Great cultural events" }
+        ],
+        "Rakvere": [
+            { name: "Erik Hansen", comment: "Historical town with welcoming atmosphere" },
+            { name: "Kristina Müller", comment: "Impressive medieval castle" },
+            { name: "Anton Novikov", comment: "Enjoyable festivals and events" }
+        ]
+    };
+
+
+    var map = L.map('map').setView([59.4370, 24.7536], 7); // Установка начального видео на Эстонию
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Добавление маркеров для каждого города
+    cities.forEach(function(city) {
+        var marker = L.marker(city.coords).addTo(map);
+        marker.bindPopup(`<b>${city.name}</b><br>${city.description}`).openPopup();
+        marker.on('click', function() {
+            showCity(city.name); // Вызов функции при клике на маркере
+        });
+    });
+
+    // Функция для отображения информации о городе
+    // Функция для отображения информации о городе
+    function showCity(cityName) {
+        var city = cities.find(function(city) {
+            return city.name === cityName;
+        });
+        if (city) {
+            map.setView(city.coords, 10); // Установка видимости на выбранный город
+            updateComments(cityName); // Обновление комментариев для выбранного города
+
+            // Показываем описание города над маркером
+            var marker = L.marker(city.coords).addTo(map);
+            marker.bindPopup(`<b>${city.name}</b><br>${city.description}`).openPopup();
+        } else {
+            alert("City not found.");
+        }
+    }
+
+
+    function updateComments(cityName) {
+        var comments = cityComments[cityName]; // Получаем комментарии для выбранного города
+        if (comments) {
+            var sectionContainer = document.getElementById("sections-container");
+            sectionContainer.innerHTML = ""; // Очищаем содержимое контейнера перед добавлением новых комментариев
+            comments.forEach(function(comment) {
+                var section = document.createElement("div");
+                section.classList.add("sec2");
+                section.style.backgroundColor = "#1C1B1B";
+                section.style.borderRadius = "20px";
+                section.innerHTML = `
+                    <div class="section">
+                        <h2>${comment.name}</h2>
+                        <p>${comment.comment}</p>
+                    </div>
+                `;
+                sectionContainer.appendChild(section); // Добавляем сформированный блок комментариев в контейнер
+            });
+        }
+    }
+</script>
+</body>
+</html>
